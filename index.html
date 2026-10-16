@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b6e7a">
+<meta name="theme-color" content="#edf2f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1517" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Grades">
@@ -12,155 +13,269 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Year 1 Grades Tracker</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@500&family=Instrument+Sans:wght@400..700&display=swap">
 <style>
-/* Layout: one column, two tabs (Courses / Performance); summary tiles over detail. */
+/* Layout: one column. Home = goniometer progress gauge + year staircase. Year view = segmented tabs (Courses / Performance / Study) over panels. */
 :root{
-  --bg:#edf1f5;--card:#ffffff;--ink:#16202e;--ink2:#3d4a5a;--mut:#5a6778;--line:#d5dce5;--grid:#e3e8ee;
-  --acc:#0b6e7a;--accink:#ffffff;--accbg:#dff1f3;--accbgink:#0b5560;--warn:#b4540a;--seg:#dfe5ec;--trend:#7d8a9b;--hover:#f4f7fa;
+  --bg:#edf2f2;--card:#ffffff;--ink:#0f2629;--ink2:#35494c;--mut:#5d7275;--line:#d2dedf;--grid:#e3ebeb;
+  --acc:#0b6b70;--accink:#ffffff;--accbg:#d8eded;--accbgink:#08494d;--acc2:#187d78;--acc3:#a9d8d2;
+  --warn:#a8520b;--warnbg:#fbeedd;--bad:#b42318;--badbg:#fbe4e1;
+  --seg:#e0e9e9;--trend:#7e9295;--hover:#f2f7f7;--wash:#f6f9f9;
+  --shadow:0 1px 2px rgb(15 38 41 / .06),0 8px 20px -10px rgb(15 38 41 / .18);
   --display:"Bricolage Grotesque",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
-  --body:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --body:"Instrument Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0f1620;--card:#172130;--ink:#e6ecf3;--ink2:#c3cdd9;--mut:#93a1b3;--line:#2a384b;--grid:#223042;
-  --acc:#5cc4d0;--accink:#0b1a20;--accbg:#173843;--accbgink:#9fe0e8;--warn:#f0a35e;--seg:#1d2a3b;--trend:#8c9aac;--hover:#1c2837;color-scheme:dark}}
+  --bg:#0b1517;--card:#122022;--ink:#e3eeee;--ink2:#bdd0d1;--mut:#8ea4a6;--line:#24393c;--grid:#1b2d30;
+  --acc:#4fc3c0;--accink:#05201f;--accbg:#143a3b;--accbgink:#a3e6e1;--acc2:#2c938f;--acc3:#245e5b;
+  --warn:#f0a35e;--warnbg:#3a2a17;--bad:#ff8f84;--badbg:#3d1c1a;
+  --seg:#182b2d;--trend:#8ca2a4;--hover:#172a2c;--wash:#0f1c1e;
+  --shadow:0 1px 2px rgb(0 0 0 / .4),0 8px 20px -10px rgb(0 0 0 / .6);color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0f1620;--card:#172130;--ink:#e6ecf3;--ink2:#c3cdd9;--mut:#93a1b3;--line:#2a384b;--grid:#223042;
-  --acc:#5cc4d0;--accink:#0b1a20;--accbg:#173843;--accbgink:#9fe0e8;--warn:#f0a35e;--seg:#1d2a3b;--trend:#8c9aac;--hover:#1c2837;color-scheme:dark}
+  --bg:#0b1517;--card:#122022;--ink:#e3eeee;--ink2:#bdd0d1;--mut:#8ea4a6;--line:#24393c;--grid:#1b2d30;
+  --acc:#4fc3c0;--accink:#05201f;--accbg:#143a3b;--accbgink:#a3e6e1;--acc2:#2c938f;--acc3:#245e5b;
+  --warn:#f0a35e;--warnbg:#3a2a17;--bad:#ff8f84;--badbg:#3d1c1a;
+  --seg:#182b2d;--trend:#8ca2a4;--hover:#172a2c;--wash:#0f1c1e;
+  --shadow:0 1px 2px rgb(0 0 0 / .4),0 8px 20px -10px rgb(0 0 0 / .6);color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--body)}
-main{max-width:880px;margin:0 auto;padding:24px 16px 48px;display:flex;flex-direction:column;gap:18px}
-h1,h2{font-family:var(--display);text-wrap:balance;margin:0}
-h1{font-size:34px;line-height:1.05}
-h2{font-size:19px}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+main{max-width:920px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+h1,h2{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+h1{font-size:clamp(32px,5vw,42px);line-height:1;font-weight:800;letter-spacing:-.025em}
+h2{font-size:19px;font-weight:700}
 .sub{color:var(--mut);font-size:14px;margin:0}
-header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px}
-.segs{display:flex;background:var(--seg);border-radius:12px;padding:4px;gap:4px}
-.segs button{min-height:44px;padding:0 18px;border:0;border-radius:9px;background:transparent;color:var(--ink2);font:inherit;font-weight:600;cursor:pointer}
-.segs button[aria-pressed="true"]{background:var(--card);color:var(--ink)}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:0}
+.mono{font-family:var(--mono);font-size:.92em;letter-spacing:.02em}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.segs{display:flex;background:var(--seg);border-radius:14px;padding:4px;gap:2px;max-width:100%}
+.segs button{flex:1 1 auto;min-height:44px;padding:0 16px;border:0;border-radius:10px;background:transparent;color:var(--ink2);font:inherit;font-size:15px;font-weight:600;cursor:pointer;white-space:nowrap}
+.segs button:hover{color:var(--ink)}
+.segs button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+@media (max-width:560px){.segs{width:100%}}
 button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
-.tile b{font-family:var(--display);font-size:30px;font-variant-numeric:tabular-nums}
-.tile span{color:var(--mut);font-size:13px}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:680px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{background:var(--card);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column-reverse;justify-content:flex-end;gap:6px}
+.tile b{font-family:var(--display);font-size:32px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.tile span{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+@media (max-width:480px){.panel{padding:16px;border-radius:16px}}
+
+/* Grade bands: one hue, getting deeper with the grade; pass and fail use the warning colours */
+.chip,.bchip{font-family:var(--mono);font-weight:500;border-radius:99px;text-align:center;background:var(--seg);color:var(--mut);white-space:nowrap}
+.chip{font-size:12px;padding:4px 10px;min-width:44px}
+.bchip{font-size:13px;padding:6px 12px}
+.chip.HD,.bchip.HD{background:var(--acc);color:var(--accink)}
+.chip.D,.bchip.D{background:var(--acc2);color:var(--accink)}
+.chip.C,.bchip.C{background:var(--acc3);color:var(--accbgink)}
+.chip.P,.bchip.P{background:var(--warnbg);color:var(--warn)}
+.chip.F,.bchip.F{background:var(--badbg);color:var(--bad)}
+
 /* Courses tab */
 .sem{display:flex;flex-direction:column;gap:8px}
-details{background:var(--card);border:1px solid var(--line);border-radius:12px}
-summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 14px;min-height:56px}
+.sem>h2{font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);padding:6px 2px 2px}
+details{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+details[open]{border-color:color-mix(in srgb,var(--acc) 40%,var(--line))}
+summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:12px 14px 12px 16px;min-height:64px}
+summary:hover{background:var(--hover)}
 summary::-webkit-details-marker{display:none}
 summary .t{flex:1;min-width:0}
-summary .t strong{display:block;font-size:15px}
+summary .t strong{display:block;font-size:15.5px;font-weight:600;line-height:1.3}
 summary .t small{color:var(--mut);font-size:12.5px}
-.pct{font-variant-numeric:tabular-nums;font-weight:600;min-width:56px;text-align:right}
-.chip{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--accbg);color:var(--accbgink);min-width:44px;text-align:center}
-.cbody{padding:4px 14px 14px;border-top:1px solid var(--line);display:flex;flex-direction:column}
-.arow{display:grid;grid-template-columns:minmax(0,1fr) 76px 84px 148px;gap:8px;align-items:end;padding:10px 0;border-bottom:1px dashed var(--line)}
+.chev{flex:none;color:var(--mut)}
+details[open] .chev{transform:rotate(90deg);color:var(--acc)}
+.pct{font-family:var(--display);font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;min-width:58px;text-align:right}
+.cbody{padding:6px 16px 16px;border-top:1px solid var(--line);display:flex;flex-direction:column;background:var(--wash)}
+.arow{display:grid;grid-template-columns:minmax(0,1fr) 84px 92px 156px;gap:10px;align-items:end;padding:12px 0;border-bottom:1px dashed var(--line)}
 .arow:last-of-type{border-bottom:0}
-.arow .name{font-size:14.5px;align-self:center}
-.fld{display:flex;flex-direction:column;gap:3px}
-.fld label{color:var(--mut);font-size:11.5px}
-input{width:100%;font:inherit;font-size:16px;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-height:40px}
+.arow .name{font-size:14.5px;align-self:center;font-weight:500}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld label{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+input{width:100%;font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);min-height:42px;font-variant-numeric:tabular-nums}
+input:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line))}
+input::placeholder{color:var(--mut)}
 input[type=number]{text-align:right}
 @media (max-width:560px){.arow{grid-template-columns:repeat(3,minmax(0,1fr))}.arow .name{grid-column:1/-1}}
-.line{margin:10px 0 0;font-size:14px}
-.need{color:var(--warn)}
-.note{color:var(--mut);font-size:12.5px;margin:6px 0 0}
+.line{margin:12px 0 0;font-size:14px;color:var(--ink2)}
+.need{color:var(--warn);font-weight:500}
+.note{color:var(--mut);font-size:12.5px;margin:8px 0 0}
+
 /* Performance tab */
 .phead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px}
 .phead p{margin:0;color:var(--ink2);font-size:14px}
-.pills{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
-.pills button{flex:none;min-height:44px;padding:0 15px;border-radius:99px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;background:var(--card);color:var(--ink2);border:1px solid var(--line)}
-.pills button[aria-pressed="true"]{background:var(--acc);color:var(--accink);border-color:var(--acc)}
-.chart{position:relative;height:340px;padding:26px 14px 34px 58px}
+.pills{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.pills button{flex:none;min-height:40px;padding:0 14px;border-radius:99px;font-family:var(--mono);font-size:12.5px;font-weight:500;letter-spacing:.02em;cursor:pointer;white-space:nowrap;background:var(--card);color:var(--ink2);border:1px solid var(--line)}
+.pills button:hover{border-color:var(--acc)}
+.pills button[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.chart{position:relative;height:340px;padding:28px 14px 36px 58px}
+@media (max-width:480px){.chart{height:280px;padding-left:50px}}
 .plot{position:relative;width:100%;height:100%}
 .hl{position:absolute;left:0;right:0;border-top:1px solid var(--grid)}
-.hl.pass{border-top:2px dashed var(--warn)}
-.yl{position:absolute;left:-56px;width:48px;text-align:right;transform:translateY(-50%);font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
-.yl.pass{color:var(--warn);font-weight:700}
+.hl.pass{border-top:1.5px dashed var(--warn)}
+.yl{position:absolute;left:-54px;width:46px;text-align:right;transform:translateY(-50%);font-family:var(--mono);font-size:11px;color:var(--mut);font-variant-numeric:tabular-nums}
+.yl.pass{color:var(--warn)}
 .vdiv{position:absolute;top:-22px;bottom:0;border-left:1px dashed var(--line)}
-.slab{position:absolute;top:-24px;font-size:12px;color:var(--mut);white-space:nowrap}
-.xl{position:absolute;bottom:-28px;transform:translateX(-50%);font-size:12px;color:var(--mut)}
+.slab{position:absolute;top:-26px;font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.xl{position:absolute;bottom:-30px;transform:translateX(-50%);font-family:var(--mono);font-size:11px;color:var(--mut)}
 .plot svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .mline{fill:none;stroke:var(--acc);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
-.tline{fill:none;stroke:var(--trend);stroke-width:2;stroke-dasharray:6 5;vector-effect:non-scaling-stroke}
+.tline{fill:none;stroke:var(--trend);stroke-width:1.75;stroke-dasharray:5 5;vector-effect:non-scaling-stroke}
 .dot{position:absolute;width:36px;height:36px;margin:-18px 0 0 -18px;padding:0;border:0;border-radius:50%;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.dot i{width:12px;height:12px;border-radius:50%;background:var(--card);border:2.5px solid var(--acc)}
-.dot.on i{width:18px;height:18px;background:var(--acc);border:0;box-shadow:0 0 0 4px var(--card),0 0 0 6px var(--acc)}
-.dot em{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);font-style:normal;font-size:12px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap}
-.legend{display:flex;flex-wrap:wrap;gap:16px;color:var(--ink2);font-size:13px;align-items:center}
+.dot i{width:11px;height:11px;border-radius:50%;background:var(--card);border:2.5px solid var(--acc)}
+.dot.on i{width:16px;height:16px;background:var(--acc);border:0;box-shadow:0 0 0 4px var(--card),0 0 0 5.5px var(--acc)}
+.dot em{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--card);font-style:normal;font-family:var(--mono);font-size:12px;font-weight:500;padding:3px 8px;border-radius:7px;white-space:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;color:var(--ink2);font-size:13px;align-items:center}
 .legend span{display:flex;align-items:center;gap:8px}
-.legend i{width:22px;border-top:3px solid var(--acc)}
+.legend i{width:22px;border-top:3px solid var(--acc);border-radius:2px}
 .legend i.t{border-top:2px dashed var(--trend)}
 .legend i.p{border-top:2px dashed var(--warn)}
-.legend label{display:flex;align-items:center;gap:6px;margin-left:auto;cursor:pointer}
-.legend input{width:18px;min-height:0;height:18px}
-.banner{background:var(--accbg);color:var(--accbgink);border-radius:10px;padding:10px 12px;font-size:14px}
+.legend label{display:flex;align-items:center;gap:8px;margin-left:auto;cursor:pointer}
+.legend input{width:18px;min-height:0;height:18px;accent-color:var(--acc)}
+.banner{background:var(--accbg);color:var(--accbgink);border-radius:12px;padding:10px 14px;font-size:14px}
 .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;align-items:start}
 .big{display:flex;align-items:center;gap:14px}
-.big b{font-family:var(--display);font-size:50px;line-height:1;font-variant-numeric:tabular-nums}
-.bchip{padding:6px 12px;border-radius:99px;font-size:14px;font-weight:700;background:var(--accbg);color:var(--accbgink)}
-.bchip.HD{background:var(--acc);color:var(--accink)}
-.bchip.P,.bchip.F{background:transparent;color:var(--warn);border:1.5px solid var(--warn)}
-dl{margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;border-top:1px solid var(--grid);padding-top:12px}
-dt{color:var(--mut);font-size:12px}
-dd{margin:0;font-weight:600}
+.big b{font-family:var(--display);font-size:56px;line-height:1;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+dl{margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;border-top:1px solid var(--grid);padding-top:14px}
+dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+dd{margin:2px 0 0;font-weight:600}
 .rows{display:flex;flex-direction:column;gap:2px;max-height:460px;overflow-y:auto}
-.row{display:grid;grid-template-columns:54px minmax(0,1fr) 52px;gap:10px;align-items:center;width:100%;min-height:52px;padding:8px;border:0;border-radius:10px;font:inherit;color:var(--ink);cursor:pointer;background:transparent;text-align:left}
+.row{display:grid;grid-template-columns:54px minmax(0,1fr) 52px;gap:10px;align-items:center;width:100%;min-height:54px;padding:8px 10px;border:0;border-radius:12px;font:inherit;color:var(--ink);cursor:pointer;background:transparent;text-align:left}
 .row:hover{background:var(--hover)}
 .row[aria-pressed="true"]{background:var(--accbg)}
-.row .d{color:var(--mut);font-size:13px;font-variant-numeric:tabular-nums}
+.row .d{font-family:var(--mono);color:var(--mut);font-size:12px;font-variant-numeric:tabular-nums}
 .row .n{display:flex;flex-direction:column;min-width:0}
-.row .n strong{font-size:14px}
+.row .n strong{font-size:14px;font-weight:600}
 .row .n small{color:var(--mut);font-size:12.5px}
-.row .m{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.row .m{font-family:var(--display);font-size:17px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
 .empty{color:var(--mut);font-size:14px;margin:0}
-@media (prefers-reduced-motion:no-preference){.dot i{transition:width .15s,height .15s}.ycard{transition:transform .18s ease}.ycard:hover{transform:translateY(-3px)}}
+
 /* Home */
-.back{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px 0 8px;margin-left:-8px;border:0;border-radius:9px;background:transparent;color:var(--acc);font:inherit;font-size:14px;font-weight:600;cursor:pointer;align-self:flex-start}
+.back{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px 0 8px;margin-left:-8px;border:0;border-radius:10px;background:transparent;color:var(--acc);font:inherit;font-size:14px;font-weight:600;cursor:pointer;align-self:flex-start}
 .back:hover{background:var(--hover)}
-.hero{display:flex;flex-direction:column;gap:18px;padding-block:8px 4px}
-.hero h1{font-size:clamp(40px,7vw,64px);line-height:.98;letter-spacing:-.02em;max-width:14ch}
-.hero .lede{margin:0;color:var(--ink2);font-size:17px;max-width:52ch}
-.track{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.track .yr{display:flex;flex-direction:column;gap:6px}
-.track .yr span{font-size:12px;color:var(--mut);font-weight:600}
-.track .cells{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:3px}
-.cell{height:22px;border-radius:4px;border:1.5px solid var(--line);background:var(--card)}
-.cell.ip{background:var(--accbg);border-color:var(--acc)}
-.cell.ok{background:var(--acc);border-color:var(--acc)}
-.trackcap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;color:var(--mut);font-size:13px}
-.trackcap b{color:var(--ink);font-variant-numeric:tabular-nums}
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:center;padding-block:8px 4px}
+.herotext{display:flex;flex-direction:column;gap:16px;min-width:0}
+.hero h1{font-size:clamp(42px,7.4vw,68px);line-height:.94;letter-spacing:-.035em;max-width:11ch;font-weight:800}
+.hero .lede{margin:0;color:var(--ink2);font-size:17px;max-width:42ch}
+.gonio{margin:0;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.gonio svg{width:100%;max-width:380px;height:auto;display:block}
+.g-track{fill:none;stroke:var(--line);stroke-width:14}
+.g-ip{fill:none;stroke:var(--acc3);stroke-width:14}
+.g-ok{fill:none;stroke:var(--acc);stroke-width:14}
+.g-tick{stroke:var(--mut);stroke-width:1;opacity:.55}
+.g-tick.mj{stroke:var(--ink2);stroke-width:1.6;opacity:1}
+.g-lab{fill:var(--mut);font-family:var(--mono);font-size:8.5px;font-weight:500}
+.g-fixed{stroke:var(--mut);stroke-width:6;stroke-linecap:round}
+.g-arm{stroke:var(--ink);stroke-width:6;stroke-linecap:round}
+.g-tip{fill:var(--acc);stroke:var(--card);stroke-width:2.5}
+.g-hub{fill:var(--card);stroke:var(--ink);stroke-width:3}
+.g-pin{fill:var(--acc)}
+.gcap{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;justify-content:center}
+.gcap b{font-family:var(--display);font-size:38px;font-weight:800;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.gcap span{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+@media (max-width:640px){.hero{grid-template-columns:1fr;gap:18px}.gonio svg{max-width:330px}}
 .stairs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
-.ycard{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:18px;text-align:left;font:inherit;color:var(--ink);background:var(--card);border:1.5px dashed var(--line);border-radius:20px;padding:18px;cursor:pointer;overflow:hidden}
-.ycard .num{font-family:var(--display);font-weight:700;font-size:112px;line-height:.8;letter-spacing:-.04em;color:var(--line)}
-.ycard .lbl{display:flex;flex-direction:column;gap:2px}
-.ycard .lbl strong{font-family:var(--display);font-size:20px}
-.ycard .lbl small{color:var(--mut);font-size:13px}
+.ycard{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:18px;text-align:left;font:inherit;color:var(--ink);background:var(--card);border:1.5px dashed var(--line);border-radius:22px;padding:18px;cursor:pointer;overflow:hidden}
+.ycard .num{font-family:var(--display);font-weight:800;font-size:116px;line-height:.8;letter-spacing:-.05em;color:var(--line)}
+.ycard .lbl{display:flex;flex-direction:column;gap:3px}
+.ycard .lbl strong{font-family:var(--display);font-size:21px;font-weight:700}
+.ycard .lbl small{color:var(--mut);font-size:13px;line-height:1.35}
 .ycard.s1{min-height:300px}.ycard.s2{min-height:340px}.ycard.s3{min-height:380px}.ycard.s4{min-height:420px}
 .ycard.live{background:var(--acc);border:0;color:var(--accink)}
-.ycard.live .num{color:var(--accink);opacity:.95}
-.ycard.live .lbl small,.ycard.live .kv span{color:var(--accink);opacity:.85}
+.ycard.live .num{color:var(--accink)}
+.ycard.live .lbl small,.ycard.live .kv span{color:var(--accink);opacity:.8}
 .kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;border-top:1px solid color-mix(in srgb,var(--accink) 30%,transparent);padding-top:12px}
 .kv div{display:flex;flex-direction:column}
-.kv b{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
-.kv span{font-size:11.5px}
-.soon{align-self:flex-start;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--seg);color:var(--ink2)}
+.kv b{font-family:var(--display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.kv span{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.soon{align-self:flex-start;font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;padding:4px 10px;border-radius:99px;background:var(--seg);color:var(--ink2)}
 .facts{display:flex;flex-wrap:wrap;gap:8px 22px;color:var(--mut);font-size:13.5px;margin:0;padding:0;list-style:none}
 .facts b{color:var(--ink)}
-@media (max-width:760px){.stairs{grid-template-columns:repeat(2,minmax(0,1fr))}.ycard.s1,.ycard.s2,.ycard.s3,.ycard.s4{min-height:250px}.track{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:440px){.stairs{grid-template-columns:1fr}.ycard.s1,.ycard.s2,.ycard.s3,.ycard.s4{min-height:0}.ycard .num{font-size:84px}}
+@media (max-width:760px){.stairs{grid-template-columns:repeat(2,minmax(0,1fr))}.ycard.s1,.ycard.s2,.ycard.s3,.ycard.s4{min-height:240px}}
+@media (max-width:440px){.stairs{grid-template-columns:1fr}
+  .ycard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 10px;align-items:end}
+  .ycard.s1,.ycard.s2,.ycard.s3,.ycard.s4{min-height:0}
+  .ycard .lbl{grid-column:1;grid-row:1}
+  .ycard .num{grid-column:2;grid-row:1/3;font-size:84px;align-self:end}
+  .ycard .kv,.ycard .soon{grid-column:1;grid-row:2}.ycard .soon{justify-self:start}}
 .ph{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:28px 22px}
-.ph .num{font-family:var(--display);font-weight:700;font-size:96px;line-height:.85;color:var(--line)}
+.ph .num{font-family:var(--display);font-weight:800;font-size:96px;line-height:.85;color:var(--line)}
 .ph p{margin:0;color:var(--ink2);max-width:46ch}
-</style>
 
+/* Study tab */
+.today{border-color:color-mix(in srgb,var(--acc) 40%,var(--line))}
+#s-date{font-family:var(--mono);font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+.plan{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.pitem{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;align-items:center;padding:12px 14px 12px 12px;border:1px solid var(--line);border-radius:14px;background:var(--wash)}
+.pt{display:flex;flex-direction:column;gap:4px;min-width:0}
+.pt strong{font-size:16px;font-weight:600;overflow-wrap:anywhere}
+.pitem.done{background:transparent}
+.pitem.done .pt strong{text-decoration:line-through;color:var(--mut)}
+.pmeta{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:13px;color:var(--ink2)}
+.code{font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.02em;padding:2px 8px;border-radius:6px;background:var(--seg);color:var(--ink2);font-variant-numeric:tabular-nums}
+.tick{width:44px;height:44px;flex:none;border-radius:50%;border:2px solid var(--acc);background:var(--card);color:var(--accink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.tick svg{opacity:0}
+.tick:hover{background:var(--accbg)}
+.tick[aria-pressed="true"]{background:var(--acc)}
+.tick[aria-pressed="true"] svg{opacity:1}
+.tick:disabled{cursor:default;border-style:dashed;background:var(--card)}
+.tick.sm{width:34px;height:34px}
+.planfoot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;color:var(--mut);font-size:14px}
+.ghost{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--acc);font:inherit;font-weight:600;cursor:pointer;flex:none}
+.ghost:hover{background:var(--hover);border-color:var(--acc)}
+.drow{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 0;border-bottom:1px dashed var(--line)}
+.drow:last-of-type{border-bottom:0}
+.dleft{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;gap:4px;height:54px;border-radius:12px;background:var(--wash);border:1px solid var(--line)}
+.dleft b{font-family:var(--display);font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+.dleft span{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.dleft.near{background:var(--warnbg);border-color:transparent}
+.dleft.near b,.dleft.near span{color:var(--warn)}
+.dn{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dn strong{font-weight:600}
+.dn small{color:var(--mut);font-size:12.5px}
+.flag{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:99px;background:var(--warnbg);color:var(--warn);white-space:nowrap}
+.prog{height:6px;width:64px;flex:none;border-radius:99px;background:var(--seg);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--acc);border-radius:99px}
+.sub2{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);margin:14px 0 2px}
+.urow{display:grid;grid-template-columns:minmax(0,1fr) 64px 160px;gap:10px;align-items:end;padding:10px 0;border-bottom:1px dashed var(--line)}
+.urow .name{font-size:14.5px;align-self:center;font-weight:500}
+.urow .w{font-family:var(--mono);color:var(--mut);font-size:12.5px;text-align:right;align-self:center;font-variant-numeric:tabular-nums}
+@media (max-width:480px){.urow{grid-template-columns:minmax(0,1fr) 56px}.urow .fld{grid-column:1/-1}}
+.trow{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;gap:8px;align-items:center;min-height:46px}
+.trow span{overflow-wrap:anywhere}
+.trow.done span{color:var(--mut);text-decoration:line-through}
+.rm{width:40px;height:40px;border:0;border-radius:10px;background:transparent;color:var(--mut);cursor:pointer;font:inherit;font-size:22px;line-height:1}
+.rm:hover{background:var(--hover);color:var(--bad)}
+.addt{display:flex;gap:8px;margin-top:8px}
+.addt input{flex:1;min-width:0}
+.hstudy{gap:12px}
+.hstudy ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.hstudy li{display:flex;gap:10px;align-items:baseline;font-size:15px}
+.hstudy li.done span:last-child{text-decoration:line-through;color:var(--mut)}
+.hrow{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+
+@media (prefers-reduced-motion:no-preference){
+  .dot i{transition:width .15s,height .15s}
+  .ycard{transition:transform .2s ease,box-shadow .2s ease}
+  .ycard:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+  .chev{transition:transform .2s ease}
+  .tick{transition:background-color .15s,transform .15s}
+  .tick:active{transform:scale(.9)}
+  .g-move{transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+  #v-home,#v-year,#v-ph,#v-courses,#v-perf,#v-study{animation:rise .35s ease both}
+}
+@keyframes rise{from{transform:translateY(8px)}to{transform:none}}
+</style>
 <style>
+/* Standalone page: safe areas, hidden toggle and the backup panel */
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;-webkit-text-size-adjust:100%}
+img{max-width:100%}
 [hidden]{display:none!important}
 .bk{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
-.bk button,.bk label.btn{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.bk button,.bk label.btn{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--acc);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.bk button:hover,.bk label.btn:hover{background:var(--hover);border-color:var(--acc)}
 .bk input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
 .bk p{margin:0;color:var(--mut);font-size:13px;flex-basis:100%}
 </style>
@@ -169,14 +284,17 @@ body{margin:0;-webkit-text-size-adjust:100%}
 <main>
 <section id="v-home" class="home" style="display:flex;flex-direction:column;gap:26px">
   <div class="hero">
-    <p class="sub">Bachelor of Physiotherapy (Honours), Adelaide University</p>
-    <h1>Four years to registered physio.</h1>
-    <p class="lede">Track every assessment, course and semester on the way through. Pick a year to open it.</p>
+    <div class="herotext">
+      <p class="eyebrow">Bachelor of Physiotherapy (Honours) · Adelaide University</p>
+      <h1>Four years to registered physio.</h1>
+      <p class="lede">Track every assessment, course and semester on the way through. Pick a year to open it.</p>
+    </div>
+    <figure class="gonio">
+      <svg viewBox="-10 -6 260 146" id="gauge" role="img" aria-label="Degree progress"></svg>
+      <figcaption class="gcap"><b id="h-units">0</b><span>of 192 units complete</span></figcaption>
+    </figure>
   </div>
-  <div class="panel" style="gap:12px">
-    <div class="trackcap"><span><b id="h-units">0</b> of 192 units complete</span><span>Each square is one 6-unit course</span></div>
-    <div class="track" id="h-track" aria-label="Course progress by year"></div>
-  </div>
+  <div class="panel hstudy" id="h-study" aria-live="polite"></div>
   <div class="stairs" id="h-years"></div>
   <ul class="facts">
     <li><b>4 years</b> full time</li>
@@ -185,9 +303,9 @@ body{margin:0;-webkit-text-size-adjust:100%}
     <li>Research Stream offered in Year 3 at a <b>GPA of 5+</b></li>
   </ul>
   <div class="panel" style="gap:10px">
-    <h2>Back up your marks</h2>
+    <h2>Back up your data</h2>
     <div class="bk">
-      <p>Your marks are saved on this device only. Download a backup now and then, and restore it if you change phones or clear your browser.</p>
+      <p>Your marks, study topics and due dates are saved on this device only. Download a backup now and then, and restore it if you change phones or clear your browser.</p>
       <button type="button" id="bk-save">Download backup</button>
       <label class="btn" for="bk-file">Restore from backup</label>
       <input type="file" id="bk-file" accept=".json,application/json">
@@ -207,17 +325,18 @@ body{margin:0;-webkit-text-size-adjust:100%}
 <header>
   <div style="display:flex;flex-direction:column;gap:4px">
     <button type="button" class="back" data-home="1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>All years</button>
-    <p class="sub">Year 1, Bachelor of Physiotherapy (Honours)</p>
+    <p class="eyebrow">Year 1 · Bachelor of Physiotherapy (Honours)</p>
     <h1 id="ttl">Courses</h1>
     <p class="sub" id="sync">Enter marks as percentages. Weights come from the 2026/27 course pages. Marks save on this device.</p>
   </div>
   <div class="segs" role="group" aria-label="Tracker sections">
     <button type="button" id="tab-courses" aria-pressed="true">Courses</button>
     <button type="button" id="tab-perf" aria-pressed="false">Performance</button>
+    <button type="button" id="tab-study" aria-pressed="false">Study</button>
   </div>
 </header>
 
-<section class="tiles" aria-label="Summary">
+<section class="tiles" id="tiles" aria-label="Summary">
   <div class="tile"><b id="t-avg">–</b><span>Weighted average mark</span></div>
   <div class="tile"><b id="t-gpa">–</b><span>Running GPA (7-point)</span></div>
   <div class="tile"><b id="t-latest">–</b><span>Latest mark</span></div>
@@ -247,6 +366,20 @@ body{margin:0;-webkit-text-size-adjust:100%}
     </div>
   </div>
 </section>
+
+<section id="v-study" hidden style="display:flex;flex-direction:column;gap:16px">
+  <div class="panel today">
+    <div class="phead"><h2>Study today</h2><p id="s-date"></p></div>
+    <div class="banner" id="s-example" hidden>These are example topics. Add the topics for each course below, and your own plan is built from them.</div>
+    <ol class="plan" id="s-plan"></ol>
+    <div class="planfoot"><span id="s-sum"></span><button type="button" class="ghost" id="s-more">Add one more to today</button></div>
+  </div>
+  <div class="panel">
+    <h2>Coming up</h2>
+    <div id="s-due"></div>
+  </div>
+  <div id="s-courses" style="display:flex;flex-direction:column;gap:18px"></div>
+</section>
 </div>
 </main>
 
@@ -263,7 +396,7 @@ var C=[
 ];
 var BY={};C.forEach(function(c){BY[c.id]=c});
 var EXAMPLE=[["2026-03-20","b",2,72],["2026-04-02","c",0,68],["2026-04-10","a",1,78],["2026-05-08","d",0,81],["2026-05-22","b",1,70],["2026-06-05","a",0,74],["2026-06-15","d",1,69],["2026-06-18","c",1,73],["2026-06-22","b",0,66],["2026-08-21","g",0,80],["2026-08-28","e",0,71],["2026-09-04","f",0,75],["2026-09-11","h",0,84],["2026-09-25","g",1,82],["2026-10-09","h",1,79]];
-var S={m:{},w:{},d:{}},ref=null,timer=null,view="courses",filter="ALL",pick=null,showTrend=true;
+var S={m:{},w:{},d:{},due:{},t:{},plan:null},ref=null,timer=null,view="courses",filter="ALL",pick=null,showTrend=true;
 var MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 function band(p){return p>=85?["HD",7,"High Distinction"]:p>=75?["D",6,"Distinction"]:p>=65?["C",5,"Credit"]:p>=50?["P",4,"Pass"]:["F",0,"Fail"]}
 function wt(c,i){var k=c.id+i;return S.w[k]!=null?S.w[k]:c.a[i][1]}
@@ -278,7 +411,7 @@ function buildCourses(){
   [1,2].forEach(function(s){
     h+='<div class="sem"><h2>Semester '+s+'</h2>';
     C.filter(function(c){return c.s===s}).forEach(function(c){
-      h+='<details><summary><div class="t"><strong>'+c.name+'</strong><small>'+c.code+', 6 units</small></div><span class="pct" id="p'+c.id+'">–</span><span class="chip" id="g'+c.id+'">–</span></summary><div class="cbody">';
+      h+='<details><summary><div class="t"><strong>'+c.name+'</strong><small><span class="mono">'+c.code+'</span> · 6 units</small></div><span class="pct" id="p'+c.id+'">–</span><span class="chip" id="g'+c.id+'">–</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary><div class="cbody">';
       c.a.forEach(function(x,i){var k=c.id+i;
         h+='<div class="arow"><span class="name">'+x[0]+'</span>'+
           '<div class="fld"><label for="w'+k+'">Weight %</label><input id="w'+k+'" data-k="'+k+'" data-t="w" type="number" inputmode="decimal" min="0" max="100" step="any" value="'+x[1]+'"></div>'+
@@ -296,11 +429,11 @@ function refreshCourses(){
     c.a.forEach(function(x,i){var k=c.id+i,w=wt(c,i),m=S.m[k];tot+=w;if(m!=null){done+=w;earn+=w*m/100}});
     var P=document.getElementById("p"+c.id),G=document.getElementById("g"+c.id),L=document.getElementById("l"+c.id);
     if(done>0){
-      var cur=earn/done*100;P.textContent=r1(cur)+"%";G.textContent=band(cur)[0];
+      var cur=earn/done*100;P.textContent=r1(cur)+"%";G.textContent=band(cur)[0];G.className="chip "+band(cur)[0];
       var rem=tot-done,t="Banked "+r1(earn)+" of "+tot+" points ("+r1(done)+"% of the course marked).";
       if(rem>0){var need=(50*tot/100-earn)/rem*100;t+=need<=0?" You already have a pass.":need>100?' <span class="need">A pass is no longer reachable on the remaining '+r1(rem)+'%.</span>':' <span class="need">Need '+r1(need)+'% on the remaining '+r1(rem)+'% to pass.</span>'}
       L.innerHTML=t;
-    }else{P.textContent="–";G.textContent="–";L.textContent="No marks entered yet."}
+    }else{P.textContent="–";G.textContent="–";G.className="chip";L.textContent="No marks entered yet."}
     if(Math.abs(tot-100)>0.01)L.innerHTML+=' <span class="need">Weights add up to '+r1(tot)+'%, not 100%.</span>';
   });
 }
@@ -392,6 +525,146 @@ function renderPerf(){
   document.getElementById("rows").innerHTML=rh;
 }
 
+
+/* ---------- Study tab ---------- */
+var CHECK='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+var DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+var MONL=["January","February","March","April","May","June","July","August","September","October","November","December"];
+var EXPLAN=[["Brachial plexus and upper limb nerves","HLTH1008","Short response questions 2 in 6 days, worth 40%"],["Cardiac cycle and pressure-volume changes","BIOL1019","Exam in 12 days, worth 50%"],["Phases of the gait cycle","REHB1001","Skills demonstration 2 in 20 days, worth 10%"]];
+function dnum(iso){var p=iso.split("-");return Date.UTC(+p[0],+p[1]-1,+p[2])/864e5}
+function daysTo(iso){return Math.round(dnum(iso)-dnum(today()))}
+function inDays(n){return n===0?"today":n===1?"tomorrow":"in "+n+" days"}
+function longDate(iso){var p=iso.split("-"),d=new Date(+p[0],+p[1]-1,+p[2]);return DAYS[d.getDay()]+" "+(+p[2])+" "+MONL[+p[1]-1]}
+function uid(){return Math.random().toString(36).slice(2,10)}
+function tl(cid){return S.t[cid]||[]}
+function nextDue(c){
+  var td=today(),best=null;
+  c.a.forEach(function(x,i){var k=c.id+i,d=S.due[k];if(S.m[k]!=null||!d||d<td)return;if(!best||d<best.d)best={k:k,d:d,name:x[0],w:wt(c,i),days:daysTo(d)}});
+  return best;
+}
+function isBehind(c,nd){var ts=tl(c.id);if(!nd||nd.days>14||!ts.length)return false;return ts.filter(function(t){return t.done}).length/ts.length<0.5}
+function candidates(){
+  var out=[];
+  C.forEach(function(c){
+    var all=tl(c.id),left=all.filter(function(t){return !t.done});if(!left.length)return;
+    var nd=nextDue(c),base=(nd?nd.w/Math.max(1,nd.days):0.3)*(0.5+left.length/all.length);
+    left.forEach(function(t,j){out.push({t:t,c:c,nd:nd,score:base*Math.pow(0.55,j)})});
+  });
+  out.sort(function(a,b){return b.score-a.score});
+  return out;
+}
+function findTopic(tid){for(var i=0;i<C.length;i++){var ts=tl(C[i].id);for(var j=0;j<ts.length;j++)if(ts[j].id===tid)return{t:ts[j],c:C[i]}}return null}
+function ensurePlan(){
+  var td=today();
+  if(S.plan&&S.plan.day===td){S.plan.ids=S.plan.ids.filter(function(id){return findTopic(id)});if(S.plan.ids.length)return S.plan}
+  S.plan={day:td,ids:candidates().slice(0,3).map(function(x){return x.t.id})};
+  return S.plan;
+}
+function reason(c){var nd=nextDue(c);return nd?esc(nd.name)+" "+inDays(nd.days)+", worth "+r1(nd.w).replace(/\.0$/,"")+"%":"No due date added for this course yet"}
+function buildStudy(){
+  var h="";
+  [1,2].forEach(function(s){
+    h+='<div class="sem"><h2>Semester '+s+'</h2>';
+    C.filter(function(c){return c.s===s}).forEach(function(c){
+      h+='<details><summary><div class="t"><strong>'+c.name+'</strong><small><span class="mono">'+c.code+'</span> · <span id="sn'+c.id+'"></span></small></div><span id="sf'+c.id+'"></span><span class="prog" aria-hidden="true"><i id="sp'+c.id+'"></i></span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary><div class="cbody">';
+      h+='<p class="sub2">Due dates</p>';
+      c.a.forEach(function(x,i){var k=c.id+i;
+        h+='<div class="urow"><span class="name">'+x[0]+'</span><span class="w" id="uw'+k+'"></span><div class="fld"><label for="u'+k+'">Due</label><input id="u'+k+'" data-k="'+k+'" data-t="u" type="date"></div></div>';});
+      h+='<p class="sub2">Topics</p><div id="tl'+c.id+'"></div>'+
+        '<div class="addt"><input id="nt'+c.id+'" type="text" data-addin="'+c.id+'" aria-label="New topic for '+esc(c.name)+'" placeholder="Add a topic this course covers" enterkeyhint="done"><button type="button" class="ghost" data-add="'+c.id+'">Add</button></div></div></details>';
+    });
+    h+='</div>';
+  });
+  document.getElementById("s-courses").innerHTML=h;
+}
+function renderStudy(){
+  var td=today();
+  document.getElementById("s-date").textContent=longDate(td);
+  var any=C.some(function(c){return tl(c.id).length});
+  document.getElementById("s-example").hidden=any;
+  var ph="",more=document.getElementById("s-more"),sum=document.getElementById("s-sum");
+  if(!any){
+    EXPLAN.forEach(function(e){ph+='<li class="pitem"><button type="button" class="tick" disabled aria-label="Example topic">'+CHECK+'</button><div class="pt"><strong>'+e[0]+'</strong><div class="pmeta"><span class="code">'+e[1]+'</span><span>'+e[2]+'</span></div></div></li>'});
+    more.hidden=true;sum.textContent="Add topics inside each course below to start your own plan.";
+  }else{
+    var pl=ensurePlan(),done=0;
+    pl.ids.forEach(function(id){var f=findTopic(id);if(!f)return;if(f.t.done)done++;
+      ph+='<li class="pitem'+(f.t.done?" done":"")+'"><button type="button" class="tick" data-tt="'+f.t.id+'" aria-pressed="'+!!f.t.done+'" aria-label="'+(f.t.done?"Mark not done: ":"Mark done: ")+esc(f.t.n)+'">'+CHECK+'</button><div class="pt"><strong>'+esc(f.t.n)+'</strong><div class="pmeta"><span class="code">'+f.c.code+'</span><span>'+reason(f.c)+'</span></div></div></li>';});
+    if(!pl.ids.length)ph='<li class="empty">Every topic is ticked off. Add more topics below, or take the day.</li>';
+    var left=candidates().filter(function(x){return pl.ids.indexOf(x.t.id)<0});
+    more.hidden=!left.length;
+    sum.textContent=(pl.ids.length?done+" of "+pl.ids.length+" done today. ":"")+(left.length?"":"Every unticked topic is already in today's plan. Add more topics inside each course below.");
+  }
+  document.getElementById("s-plan").innerHTML=ph;
+
+  // coming up
+  var rows=[];
+  C.forEach(function(c){c.a.forEach(function(x,i){var k=c.id+i,d=S.due[k];if(S.m[k]!=null||!d||d<td)return;rows.push({c:c,k:k,d:d,name:x[0],w:wt(c,i)})})});
+  rows.sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:0});
+  var dh="",anyBehind=false;
+  rows.slice(0,8).forEach(function(r){
+    var n=daysTo(r.d),ts=tl(r.c.id),cov=ts.filter(function(t){return t.done}).length,nd=nextDue(r.c),bh=nd&&nd.k===r.k&&isBehind(r.c,nd);
+    if(bh)anyBehind=true;
+    dh+='<div class="drow"><div class="dleft'+(n<=7?" near":"")+'"><b>'+n+'</b><span>'+(n===0?"today":n===1?"day":"days")+'</span></div><div class="dn"><strong>'+esc(r.name)+'</strong><small>'+r.c.code+', '+fmtDate(r.d)+', '+r1(r.w).replace(/\.0$/,"")+'% of course'+(ts.length?', '+cov+'/'+ts.length+' topics covered':'')+'</small></div>'+(bh?'<span class="flag">Behind</span>':'<span></span>')+'</div>';
+  });
+  if(!rows.length)dh='<p class="empty">Nothing due yet. Open a course below and add its due dates.</p>';
+  if(anyBehind)dh+='<p class="note">Behind means less than half of that course\'s topics are ticked, with two weeks or less to go.</p>';
+  document.getElementById("s-due").innerHTML=dh;
+
+  // per course
+  C.forEach(function(c){
+    var ts=tl(c.id),cov=ts.filter(function(t){return t.done}).length,nd=nextDue(c);
+    document.getElementById("sn"+c.id).textContent=ts.length?cov+" of "+ts.length+" topics covered":"no topics yet";
+    document.getElementById("sp"+c.id).style.width=(ts.length?cov/ts.length*100:0)+"%";
+    document.getElementById("sf"+c.id).innerHTML=isBehind(c,nd)?'<span class="flag">Behind</span>':"";
+    c.a.forEach(function(x,i){document.getElementById("uw"+c.id+i).textContent=r1(wt(c,i)).replace(/\.0$/,"")+"%"});
+    document.getElementById("tl"+c.id).innerHTML=ts.length?ts.map(function(t){
+      return '<div class="trow'+(t.done?" done":"")+'"><button type="button" class="tick sm" data-tt="'+t.id+'" aria-pressed="'+!!t.done+'" aria-label="'+(t.done?"Mark not covered: ":"Mark covered: ")+esc(t.n)+'">'+CHECK+'</button><span>'+esc(t.n)+'</span><button type="button" class="rm" data-rm="'+t.id+'" aria-label="Remove '+esc(t.n)+'">&times;</button></div>'}).join(""):'<p class="empty">No topics yet. List what this course covers, then tick each one off once you have studied it.</p>';
+  });
+}
+function renderHomeStudy(){
+  var el=document.getElementById("h-study"),any=C.some(function(c){return tl(c.id).length}),h;
+  if(!any){
+    h='<div class="hrow"><h2>Study today</h2></div><p class="empty">Add the topics for each Year 1 course and you get a short list of what to study each day, based on what is due soonest and worth the most.</p><div><button type="button" class="ghost" data-study="1">Set up study plan</button></div>';
+  }else{
+    var pl=ensurePlan(),items=pl.ids.map(findTopic).filter(Boolean),done=items.filter(function(f){return f.t.done}).length;
+    h='<div class="hrow"><h2>Study today</h2><span class="sub">'+(items.length?done+" of "+items.length+" done":"All caught up")+'</span></div>';
+    if(items.length)h+='<ul>'+items.map(function(f){return '<li'+(f.t.done?' class="done"':'')+'><span class="code">'+f.c.code+'</span><span>'+esc(f.t.n)+'</span></li>'}).join("")+'</ul>';
+    h+='<div><button type="button" class="ghost" data-study="1">Open study plan</button></div>';
+  }
+  el.innerHTML=h;
+}
+function addTopic(cid){
+  var inp=document.getElementById("nt"+cid),v=inp.value.trim();if(!v)return;
+  (S.t[cid]=S.t[cid]||[]).push({id:uid(),n:v.slice(0,120),done:null});
+  inp.value="";inp.focus();refresh();save();
+}
+function toggleTopic(tid){var f=findTopic(tid);if(!f)return;f.t.done=f.t.done?null:today();refresh();save()}
+function removeTopic(tid){var f=findTopic(tid);if(!f)return;S.t[f.c.id]=tl(f.c.id).filter(function(t){return t.id!==tid});refresh();save()}
+function moreTopic(){var pl=ensurePlan(),x=candidates().filter(function(x){return pl.ids.indexOf(x.t.id)<0})[0];if(!x)return;pl.ids.push(x.t.id);refresh();save()}
+
+
+/* ---------- Goniometer gauge (home) ---------- */
+var GX=120,GY=124,GR=96;
+function gpt(a,r){var t=a*Math.PI/180;return[(GX-r*Math.cos(t)).toFixed(2),(GY-r*Math.sin(t)).toFixed(2)]}
+function garc(a0,a1){if(a1-a0<0.01)return"";var p0=gpt(a0,GR),p1=gpt(a1,GR);return"M"+p0[0]+" "+p0[1]+" A"+GR+" "+GR+" 0 0 1 "+p1[0]+" "+p1[1]}
+function buildGauge(){
+  var h='<path class="g-track" d="'+garc(0,180)+'"/><path class="g-ip" id="g-ip" d=""/><path class="g-ok" id="g-ok" d=""/>';
+  for(var a=0;a<=180;a+=9){var mj=a%45===0,p0=gpt(a,mj?66:74),p1=gpt(a,82);h+='<line class="g-tick'+(mj?" mj":"")+'" x1="'+p0[0]+'" y1="'+p0[1]+'" x2="'+p1[0]+'" y2="'+p1[1]+'"/>'}
+  [0,48,96,144,192].forEach(function(u,i){var p=gpt(i*45,117);h+='<text class="g-lab" x="'+p[0]+'" y="'+p[1]+'" text-anchor="middle" dominant-baseline="middle">'+u+'</text>'});
+  h+='<line class="g-fixed" x1="'+GX+'" y1="'+GY+'" x2="'+(GX-104)+'" y2="'+GY+'"/>';
+  h+='<g class="g-move" id="g-move" style="transform-origin:'+GX+'px '+GY+'px;transform:rotate(0deg)"><line class="g-arm" x1="'+GX+'" y1="'+GY+'" x2="'+(GX-104)+'" y2="'+GY+'"/><circle class="g-tip" cx="'+(GX-GR)+'" cy="'+GY+'" r="6"/></g>';
+  h+='<circle class="g-hub" cx="'+GX+'" cy="'+GY+'" r="10"/><circle class="g-pin" cx="'+GX+'" cy="'+GY+'" r="3.5"/>';
+  document.getElementById("gauge").innerHTML=h;
+}
+function renderGauge(ok,ip){
+  var aOk=ok/192*180,aIp=Math.min(180,(ok+ip)/192*180);
+  document.getElementById("g-ok").setAttribute("d",garc(0,aOk));
+  document.getElementById("g-ip").setAttribute("d",garc(aOk,aIp));
+  document.getElementById("g-move").style.transform="rotate("+aOk.toFixed(2)+"deg)";
+  document.getElementById("gauge").setAttribute("aria-label",ok+" of 192 units complete"+(ip?", "+ip+" more in progress":""));
+}
+
 /* ---------- Home ---------- */
 function courseState(c){
   var done=0,earn=0,tot=0;
@@ -401,15 +674,11 @@ function courseState(c){
   return"ip";
 }
 function renderHome(){
-  var units=0,cells="",passed=0,marked=0,total=0;
-  C.forEach(function(c){var st=courseState(c);if(st==="ok"){units+=6;passed++}
-    c.a.forEach(function(x,i){total++;if(S.m[c.id+i]!=null)marked++});
-    cells+='<span class="cell '+st+'" title="'+esc(c.code+" "+c.name)+'"></span>';});
+  var units=0,ipu=0,passed=0,marked=0,total=0;
+  C.forEach(function(c){var st=courseState(c);if(st==="ok"){units+=6;passed++}else if(st==="ip")ipu+=6;
+    c.a.forEach(function(x,i){total++;if(S.m[c.id+i]!=null)marked++});});
   document.getElementById("h-units").textContent=units;
-  var empty='';for(var j=0;j<8;j++)empty+='<span class="cell"></span>';
-  var t="";
-  for(var y=1;y<=4;y++)t+='<div class="yr"><span>Year '+y+'</span><div class="cells">'+(y===1?cells:empty)+'</div></div>';
-  document.getElementById("h-track").innerHTML=t;
+  renderGauge(units,ipu);
   var all=points(),st=all.example?null:stats(all.pts);
   var yh='<button type="button" class="ycard live s1" data-year="1" aria-label="Open Year 1">'+
     '<span class="lbl"><strong>Year 1</strong><small>8 courses, 48 units</small></span><span class="num">1</span>'+
@@ -418,10 +687,11 @@ function renderHome(){
   for(var n=2;n<=4;n++)yh+='<button type="button" class="ycard s'+n+'" data-year="'+n+'" aria-label="Year '+n+', not set up yet">'+
     '<span class="lbl"><strong>Year '+n+'</strong><small>'+notes[n]+'</small></span><span class="num">'+n+'</span><span class="soon">Not set up yet</span></button>';
   document.getElementById("h-years").innerHTML=yh;
+  renderHomeStudy();
 }
 
 /* ---------- Wiring ---------- */
-function refresh(){refreshCourses();refreshTiles();if(view==="perf")renderPerf();if(view==="home")renderHome()}
+function refresh(){refreshCourses();refreshTiles();if(view==="perf")renderPerf();if(view==="study")renderStudy();if(view==="home")renderHome()}
 function show(id){["v-home","v-ph","v-year"].forEach(function(s){document.getElementById(s).hidden=s!==id});window.scrollTo(0,0)}
 function goHome(){view="home";show("v-home");renderHome();try{localStorage.setItem("grades-y1-view","home")}catch(e){}}
 function goPlaceholder(n){view="ph";show("v-ph");document.getElementById("ph-num").textContent=n;document.getElementById("ph-title").textContent="Year "+n}
@@ -429,20 +699,25 @@ function setView(v){
   view=v;show("v-year");
   document.getElementById("v-courses").hidden=v!=="courses";
   document.getElementById("v-perf").hidden=v!=="perf";
+  document.getElementById("v-study").hidden=v!=="study";
+  document.getElementById("tiles").hidden=v==="study";
   document.getElementById("tab-courses").setAttribute("aria-pressed",v==="courses");
   document.getElementById("tab-perf").setAttribute("aria-pressed",v==="perf");
-  document.getElementById("ttl").textContent=v==="perf"?"Performance":"Courses";
+  document.getElementById("tab-study").setAttribute("aria-pressed",v==="study");
+  document.getElementById("ttl").textContent=v==="perf"?"Performance":v==="study"?"Study":"Courses";
   if(v==="perf")renderPerf();
+  if(v==="study")renderStudy();
   try{localStorage.setItem("grades-y1-view",v)}catch(e){}
 }
 function fill(){
   ["m","w","d"].forEach(function(t){Object.keys(S[t]).forEach(function(k){var e=document.getElementById(t+k);if(e)e.value=S[t][k]})});
+  Object.keys(S.due).forEach(function(k){var e=document.getElementById("u"+k);if(e)e.value=S.due[k]});
 }
 function note(t){document.getElementById("sync").textContent=t}
 function save(){
   clearTimeout(timer);
   timer=setTimeout(function(){
-    var d={m:S.m,w:S.w,d:S.d};
+    var d={m:S.m,w:S.w,d:S.d,due:S.due,t:S.t,plan:S.plan};
     try{localStorage.setItem("grades-y1",JSON.stringify(d))}catch(e){note("Couldn't save on this device. Check that the browser isn't in private mode.")}
   },600);
 }
@@ -450,6 +725,7 @@ document.addEventListener("input",function(e){
   var el=e.target,k=el.dataset&&el.dataset.k;if(!k)return;
   var t=el.dataset.t;
   if(t==="d"){if(el.value)S.d[k]=el.value;else delete S.d[k]}
+  else if(t==="u"){if(el.value)S.due[k]=el.value;else delete S.due[k]}
   else{
     var v=el.value===""?null:Math.max(0,Math.min(100,parseFloat(el.value)));
     var bag=t==="m"?S.m:S.w;
@@ -460,25 +736,33 @@ document.addEventListener("input",function(e){
 });
 document.addEventListener("click",function(e){
   var b=e.target.closest("button");if(!b)return;
+  if(b.dataset.tt){toggleTopic(b.dataset.tt);return}
+  if(b.dataset.rm){removeTopic(b.dataset.rm);return}
+  if(b.dataset.add){addTopic(b.dataset.add);return}
+  if(b.id==="s-more"){moreTopic();return}
+  if(b.dataset.study){setView("study");return}
   if(b.dataset.home)goHome();
   else if(b.dataset.year){if(b.dataset.year==="1")setView("courses");else goPlaceholder(+b.dataset.year)}
   else if(b.id==="tab-courses")setView("courses");
   else if(b.id==="tab-perf")setView("perf");
+  else if(b.id==="tab-study")setView("study");
   else if(b.dataset.f){filter=b.dataset.f;pick=null;renderPerf()}
   else if(b.dataset.p){pick=b.dataset.p;renderPerf()}
 });
+document.addEventListener("keydown",function(e){var c=e.target.dataset&&e.target.dataset.addin;if(c&&e.key==="Enter"){e.preventDefault();addTopic(c)}});
 document.getElementById("showTrend").addEventListener("change",function(e){showTrend=e.target.checked;renderPerf()});
 
-buildCourses();
+buildCourses();buildStudy();buildGauge();
 if(location.hash==="#performance")setView("perf");
+else if(location.hash==="#study")setView("study");
 else if(location.hash==="#year1")setView("courses");
 else goHome();
 refresh();
-try{var raw=localStorage.getItem("grades-y1");if(raw){var d0=JSON.parse(raw);S.m=d0.m||{};S.w=d0.w||{};S.d=d0.d||{};fill();refresh()}}catch(e){}
+try{var raw=localStorage.getItem("grades-y1");if(raw){var d0=JSON.parse(raw);S.m=d0.m||{};S.w=d0.w||{};S.d=d0.d||{};S.due=d0.due||{};S.t=d0.t||{};S.plan=d0.plan||null;fill();refresh()}}catch(e){}
 
 function bkMsg(t){document.getElementById("bk-msg").textContent=t}
 document.getElementById("bk-save").addEventListener("click",function(){
-  var blob=new Blob([JSON.stringify({app:"grades-tracker",v:1,saved:new Date().toISOString(),m:S.m,w:S.w,d:S.d},null,2)],{type:"application/json"});
+  var blob=new Blob([JSON.stringify({app:"grades-tracker",v:2,saved:new Date().toISOString(),m:S.m,w:S.w,d:S.d,due:S.due,t:S.t,plan:S.plan},null,2)],{type:"application/json"});
   var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="grades-backup-"+today()+".json";
   document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},2000);
   bkMsg("Backup downloaded. Keep it somewhere safe, like iCloud Drive.");
@@ -488,9 +772,10 @@ document.getElementById("bk-file").addEventListener("change",function(e){
   var r=new FileReader();
   r.onload=function(){
     try{var d=JSON.parse(r.result);if(!d||typeof d.m!=="object")throw 0;
-      S.m=d.m||{};S.w=d.w||{};S.d=d.d||{};
-      buildCourses();fill();refresh();save();
-      bkMsg("Restored "+Object.keys(S.m).length+" marks from "+f.name+".");
+      S.m=d.m||{};S.w=d.w||{};S.d=d.d||{};S.due=d.due||{};S.t=d.t||{};S.plan=d.plan||null;
+      buildCourses();buildStudy();fill();refresh();save();
+      var nt=0;Object.keys(S.t).forEach(function(k){nt+=S.t[k].length});
+      bkMsg("Restored "+Object.keys(S.m).length+" marks and "+nt+" topics from "+f.name+".");
     }catch(err){bkMsg("That file isn't a grades backup. Choose a file named grades-backup-....json.")}
     e.target.value="";
   };
