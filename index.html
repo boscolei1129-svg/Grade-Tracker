@@ -278,6 +278,21 @@ img{max-width:100%}
 .bk button:hover,.bk label.btn:hover{background:var(--hover);border-color:var(--acc)}
 .bk input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
 .bk p{margin:0;color:var(--mut);font-size:13px;flex-basis:100%}
+/* Account and cloud sync */
+.acct{gap:12px}
+.acct .who{display:flex;align-items:center;gap:12px;min-width:0}
+.acct .who img,.acct .who .av{width:40px;height:40px;border-radius:50%;flex:none;background:var(--accbg);color:var(--accbgink);display:flex;align-items:center;justify-content:center;font-weight:700;object-fit:cover}
+.acct .who div{display:flex;flex-direction:column;min-width:0}
+.acct .who strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.gbtn{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 18px 0 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.gbtn:hover{background:var(--hover);border-color:var(--acc)}
+.gbtn svg{flex:none}
+.dotst{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--mut)}
+.dotst::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--trend)}
+.dotst.ok::before{background:var(--acc)}
+.dotst.warn::before{background:var(--warn)}
+.acct .err{color:var(--bad);font-size:13.5px;margin:0}
 </style>
 </head>
 <body>
@@ -302,10 +317,26 @@ img{max-width:100%}
     <li><b>45 weeks</b> of clinical placement</li>
     <li>Research Stream offered in Year 3 at a <b>GPA of 5+</b></li>
   </ul>
+  <div class="panel acct" id="acct" hidden>
+    <div class="hrow"><h2>Sync across devices</h2><span class="dotst" id="acct-dot">Not signed in</span></div>
+    <div id="acct-out-view">
+      <p class="empty">Sign in with Google to keep your marks, study topics and due dates the same on your phone, laptop and any other device.</p>
+    </div>
+    <div class="who" id="acct-in-view" hidden>
+      <span class="av" id="acct-av" aria-hidden="true"></span>
+      <div><strong id="acct-name"></strong><span class="sub" id="acct-email"></span></div>
+    </div>
+    <p class="err" id="acct-err" hidden></p>
+    <div class="row">
+      <button type="button" class="gbtn" id="acct-signin"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continue with Google</button>
+      <button type="button" class="ghost" id="acct-syncnow" hidden>Sync now</button>
+      <button type="button" class="ghost" id="acct-signout" hidden>Sign out</button>
+    </div>
+  </div>
   <div class="panel" style="gap:10px">
     <h2>Back up your data</h2>
     <div class="bk">
-      <p>Your marks, study topics and due dates are saved on this device only. Download a backup now and then, and restore it if you change phones or clear your browser.</p>
+      <p id="bk-intro">Your marks, study topics and due dates are saved on this device only. Download a backup now and then, and restore it if you change phones or clear your browser.</p>
       <button type="button" id="bk-save">Download backup</button>
       <label class="btn" for="bk-file">Restore from backup</label>
       <input type="file" id="bk-file" accept=".json,application/json">
@@ -383,7 +414,12 @@ img{max-width:100%}
 </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
 <script>
+/* Cloud sync settings. Paste your Supabase Project URL and publishable key here.
+   Leave both empty and the app keeps working on this device only. */
+var SUPABASE_URL="";
+var SUPABASE_KEY="";
 var C=[
 {id:"a",s:1,code:"BIOL1006",name:"Human Anatomy 100",a:[["Short response questions",60],["Skills demonstration",40]]},
 {id:"b",s:1,code:"BIOL1018",name:"Human Physiology 100",a:[["Exam",50],["Data collection and analysis (3 tasks)",30],["Multiple choice questions",20]]},
@@ -714,12 +750,123 @@ function fill(){
   Object.keys(S.due).forEach(function(k){var e=document.getElementById("u"+k);if(e)e.value=S.due[k]});
 }
 function note(t){document.getElementById("sync").textContent=t}
+function snapshot(){return{m:S.m,w:S.w,d:S.d,due:S.due,t:S.t,plan:S.plan,rev:S.rev||0}}
+function saveLocal(){try{localStorage.setItem("grades-y1",JSON.stringify(snapshot()));return true}catch(e){note("Couldn't save on this device. Check that the browser isn't in private mode.");return false}}
 function save(){
+  S.rev=Date.now();editSeq++;
+  var mt=syncMeta();mt.dirty=true;setSyncMeta(mt);
   clearTimeout(timer);
-  timer=setTimeout(function(){
-    var d={m:S.m,w:S.w,d:S.d,due:S.due,t:S.t,plan:S.plan};
-    try{localStorage.setItem("grades-y1",JSON.stringify(d))}catch(e){note("Couldn't save on this device. Check that the browser isn't in private mode.")}
-  },600);
+  timer=setTimeout(function(){saveLocal();sync()},600);
+}
+
+/* ---------- Cloud sync (Supabase + Google sign-in) ----------
+   All of a user's data lives in one row of the app_data table: (user_id, app) -> data.
+   Each device also keeps its own copy in localStorage, so the app works offline.
+   syncMeta: base = the cloud row's updated_at when this device last synced,
+             dirty = this device has changes the cloud hasn't seen yet. */
+var APP_ID="grades",sb=null,user=null,syncing=false,syncAgain=false,editSeq=0;
+function syncMeta(){try{return JSON.parse(localStorage.getItem("grades-y1-sync")||"{}")}catch(e){return{}}}
+function setSyncMeta(m){try{localStorage.setItem("grades-y1-sync",JSON.stringify(m))}catch(e){}}
+function hasData(d){if(!d)return false;var n=0;["m","w","d","due"].forEach(function(f){n+=Object.keys(d[f]||{}).length});Object.keys(d.t||{}).forEach(function(c){n+=(d.t[c]||[]).length});return n>0}
+function applyData(d){
+  S.m=d.m||{};S.w=d.w||{};S.d=d.d||{};S.due=d.due||{};S.t=d.t||{};S.plan=d.plan||null;S.rev=d.rev||0;
+  saveLocal();buildCourses();buildStudy();fill();refresh();
+}
+/* Used only when both this device and the cloud changed since the last sync.
+   Keeps everything from the newer copy, then adds anything that only the older copy has. */
+function mergeData(older,newer){
+  var o=JSON.parse(JSON.stringify(newer||{}));
+  ["m","w","d","due"].forEach(function(f){o[f]=o[f]||{};Object.keys((older||{})[f]||{}).forEach(function(k){if(!(k in o[f]))o[f][k]=older[f][k]})});
+  o.t=o.t||{};
+  Object.keys((older||{}).t||{}).forEach(function(c){
+    var have={};(o.t[c]=o.t[c]||[]).forEach(function(x){have[x.id]=1});
+    (older.t[c]||[]).forEach(function(x){if(!have[x.id])o.t[c].push(x)});
+  });
+  o.rev=Math.max((older||{}).rev||0,(newer||{}).rev||0);
+  return o;
+}
+async function sync(){
+  if(!sb||!user)return;
+  if(syncing){syncAgain=true;return}
+  syncing=true;setSyncState("Syncing…","");
+  try{
+    var mt=syncMeta(),local=snapshot(),startSeq=editSeq;
+    var dirty=!!mt.dirty||(mt.base==null&&hasData(local));
+    var r=await sb.from("app_data").select("data,updated_at").eq("user_id",user.id).eq("app",APP_ID).maybeSingle();
+    if(r.error)throw r.error;
+    var remote=r.data,upload=null;
+    if(!remote){upload=local}                                   // first time: put this device's data in the cloud
+    else if(mt.base===remote.updated_at){if(dirty)upload=local}  // cloud unchanged since last sync
+    else if(!dirty||!hasData(local)){applyData(remote.data)}      // only the cloud changed: take it
+    else{                                                         // both changed: merge, newer copy wins clashes
+      var merged=(local.rev||0)>=((remote.data||{}).rev||0)?mergeData(remote.data,local):mergeData(local,remote.data);
+      applyData(merged);upload=merged;
+    }
+    var base=remote?remote.updated_at:null;
+    if(upload){
+      var u=await sb.from("app_data").upsert({user_id:user.id,app:APP_ID,data:upload,updated_at:new Date().toISOString()},{onConflict:"user_id,app"}).select("updated_at").single();
+      if(u.error)throw u.error;
+      base=u.data.updated_at;
+    }
+    mt=syncMeta();mt.base=base;mt.dirty=editSeq!==startSeq;setSyncMeta(mt);   // still dirty only if edited mid-sync
+    setSyncState("Synced just now","ok");
+  }catch(err){
+    var off=!navigator.onLine||/fetch|network/i.test(String(err&&err.message));
+    setSyncState(off?"Offline. Changes are saved here and will sync later.":"Couldn't sync. Changes are saved on this device.","warn");
+    if(!off)console.warn("Sync failed",err);
+  }finally{
+    syncing=false;
+    if(syncAgain){syncAgain=false;sync()}
+  }
+}
+function setSyncState(text,cls){
+  var dot=document.getElementById("acct-dot");dot.textContent=text;dot.className="dotst"+(cls?" "+cls:"");
+  if(user)note(cls==="ok"?"Marks sync to your Google account.":text);
+}
+function renderAcct(){
+  var signed=!!user;
+  document.getElementById("acct-out-view").hidden=signed;
+  document.getElementById("acct-in-view").hidden=!signed;
+  document.getElementById("acct-signin").hidden=signed;
+  document.getElementById("acct-signout").hidden=!signed;
+  document.getElementById("acct-syncnow").hidden=!signed;
+  document.getElementById("bk-intro").textContent=signed
+    ?"Your data syncs to your Google account. A backup file is still a good safety net."
+    :"Your marks, study topics and due dates are saved on this device only. Download a backup now and then, and restore it if you change phones or clear your browser.";
+  if(!signed){setSyncState("Not signed in","");note("Enter marks as percentages. Weights come from the 2026/27 course pages. Marks save on this device.");return}
+  var md=user.user_metadata||{},name=md.full_name||md.name||"Signed in",email=user.email||"";
+  document.getElementById("acct-name").textContent=name;
+  document.getElementById("acct-email").textContent=email;
+  var av=document.getElementById("acct-av");av.textContent=(name||email||"?").trim().charAt(0).toUpperCase();
+}
+function acctError(t){var e=document.getElementById("acct-err");e.textContent=t||"";e.hidden=!t}
+function initCloud(){
+  if(!SUPABASE_URL||!SUPABASE_KEY||!window.supabase)return;   // not set up: stay on-device only
+  document.getElementById("acct").hidden=false;
+  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{flowType:"pkce",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  // Google sends errors back in the address bar
+  var qs=new URLSearchParams(location.search);
+  if(qs.get("error_description"))acctError("Sign-in didn't finish: "+qs.get("error_description"));
+  sb.auth.onAuthStateChange(function(ev,session){
+    user=session?session.user:null;renderAcct();
+    if(user&&(ev==="SIGNED_IN"||ev==="INITIAL_SESSION")){
+      acctError("");
+      if(location.search)history.replaceState(null,"",location.pathname+location.hash);
+      setTimeout(sync,0);   // Supabase asks that other calls run outside this callback
+    }
+  });
+  document.getElementById("acct-signin").addEventListener("click",async function(){
+    acctError("");
+    var r=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname}});
+    if(r.error)acctError("Couldn't start Google sign-in: "+r.error.message);
+  });
+  document.getElementById("acct-signout").addEventListener("click",async function(){
+    await sb.auth.signOut();
+    var mt=syncMeta();delete mt.base;mt.dirty=false;setSyncMeta(mt);   // keep this device's copy
+  });
+  document.getElementById("acct-syncnow").addEventListener("click",sync);
+  document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")sync()});
+  window.addEventListener("online",sync);
 }
 document.addEventListener("input",function(e){
   var el=e.target,k=el.dataset&&el.dataset.k;if(!k)return;
@@ -758,7 +905,8 @@ else if(location.hash==="#study")setView("study");
 else if(location.hash==="#year1")setView("courses");
 else goHome();
 refresh();
-try{var raw=localStorage.getItem("grades-y1");if(raw){var d0=JSON.parse(raw);S.m=d0.m||{};S.w=d0.w||{};S.d=d0.d||{};S.due=d0.due||{};S.t=d0.t||{};S.plan=d0.plan||null;fill();refresh()}}catch(e){}
+try{var raw=localStorage.getItem("grades-y1");if(raw){var d0=JSON.parse(raw);S.m=d0.m||{};S.w=d0.w||{};S.d=d0.d||{};S.due=d0.due||{};S.t=d0.t||{};S.plan=d0.plan||null;S.rev=d0.rev||0;fill();refresh()}}catch(e){}
+initCloud();
 
 function bkMsg(t){document.getElementById("bk-msg").textContent=t}
 document.getElementById("bk-save").addEventListener("click",function(){
